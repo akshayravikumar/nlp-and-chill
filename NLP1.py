@@ -18,7 +18,6 @@ def embeddings(directory):
     while elt !="":
         if count%10000==0:
             print count
-        count+=1
         arr=elt.split()
         word,vector=arr[0],arr[1:]
         mapping[word]=count
@@ -26,6 +25,7 @@ def embeddings(directory):
         embeddings.append(temp)
 
         elt = file.readline()
+        count += 1
     return embeddings,mapping
 embed,map=embeddings("askubuntu-master/vectors_pruned_by_tests_fixed.200.txt")
 
@@ -228,9 +228,9 @@ class CNN(nn.Module):
 
 def parser():
     parser=argparse.ArgumentParser(description="NLP project P1")
-    parser.add_argument("--lr",type=float, default=0.1)
-    parser.add_argument("--epochs",type=int,default=1)
-    parser.add_argument("--batch_size",type=int,default=16)
+    parser.add_argument("--lr",type=float, default=0.001)
+    parser.add_argument("--epochs",type=int,default=10)
+    parser.add_argument("--batch_size",type=int,default=40)
     parser.add_argument("--weight",type=float,default=1e-3)
     return parser.parse_args()
 args=parser()
@@ -254,7 +254,7 @@ def run_epoch(data,model,optimizer,args,is_training):
             optimizer.zero_grad()
         out=model(x)
 
-        loss=F.multi_margin_loss(out,y.long())
+        loss=F.multi_margin_loss(out,y.long(),margin=0.2)
 
         if is_training:
             loss.backward()
@@ -263,7 +263,7 @@ def run_epoch(data,model,optimizer,args,is_training):
         losses+=loss.data
     return 1.0*losses/count
 def train_model(train_data,dev_data,test_data,model):
-    optimizer=torch.optim.Adam(model.parameters(),lr=args.lr,weight_decay=args.weight)
+    optimizer=torch.optim.Adam(model.parameters(),lr=args.lr)
 
     for epoch in range(0,args.epochs):
         print "epoch: "+str(epoch)
