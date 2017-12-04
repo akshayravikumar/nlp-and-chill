@@ -29,6 +29,7 @@ def embeddings(directory):
     return embeddings,mapping
 embed,map=embeddings("askubuntu-master/vectors_pruned_by_tests_fixed.200.txt")
 
+
 def parse_file(file,(a,b,c)):
     matrix=np.zeros((a,b,c))
 
@@ -36,6 +37,7 @@ def parse_file(file,(a,b,c)):
     counter=0
     while query!="":
         arr=query.split("\t")
+        #An extra field is found in val and test sets (BM25 scores)
         if len(arr)==4:
             q,q_pos,Q_neg,BM=arr
             BM=BM.split()
@@ -65,7 +67,6 @@ def parse_file(file,(a,b,c)):
         counter += 1
     return matrix
 #Assuming num_negs>num_pos
-num_pos=6
 num_negs=20
 def make_sets(dir_train,dir_test,dir_dev):
     train_file=open(dir_train)
@@ -79,6 +80,7 @@ def make_sets(dir_train,dir_test,dir_dev):
     return train,dev,test
 train,dev,test=make_sets("askubuntu-master/train_random.txt","askubuntu-master/dev.txt","askubuntu-master/test.txt")
 
+#Takes raw corpus files and outputs tuple of dictionaries, maps from id to array of words(string)
 def corpus(directory):
     id_to_title={}
     id_to_body={}
@@ -100,6 +102,7 @@ def corpus(directory):
     return id_to_title,id_to_body
 id_to_title,id_to_body=corpus("askubuntu-master/texts_raw_fixed.txt")
 
+
 #Question id, mapping: either id_to_title or id_to_body
 def question_to_vec(question,mapping):
     sentence=mapping.get(question)
@@ -113,8 +116,12 @@ def question_to_vec(question,mapping):
             matrix.append(vec)
     a=np.asarray(matrix).T
 
-    x,y=a.shape
-    a=a.reshape(1,x,y)
+
+    if len(a.shape)==1:
+        return None
+    else:
+        x, y = a.shape
+        a=a.reshape(1,x,y)
     garbage=torch.from_numpy(a).float()
     return garbage
 
@@ -142,12 +149,16 @@ class Data(data.Dataset):
         return len(self.Xmatrix)
     def __getitem__(self,index):
         #Assumptions titles aren't longer than 25
+        #200=encoding dim, 25=max title length, 100=max body length
         garbage1=torch.zeros(1,200,25)
         garbage2=torch.zeros(1,200,100)
         main_query=self.Xmatrix[index,0]
 
         main_title=question_to_vec(main_query,id_to_title)
         main_body=question_to_vec(main_query,id_to_body)
+        #Some words have empty mappings, hence this hack just bypasses them
+        if main_title is None or main_body is None:
+            return {"x":torch.zeros(22,200,125)}
         shape1=main_title.shape[-1]
         shape2=main_body.shape[-1]
         garbage1[0,:,:min(25,shape1)]=main_title[0,:,:min(25,shape1)]
@@ -156,23 +167,26 @@ class Data(data.Dataset):
         for elt in self.Xmatrix[index,1:]:
             query_title=question_to_vec(elt,id_to_title)
             query_body=question_to_vec(elt,id_to_body)
+            # Some words have empty mappings, hence this hack just bypasses them
+            if query_title is None or query_body is None:
+                return {"x":torch.zeros(22,200,125)}
             garbo1=torch.zeros(1,200,25)
             garbo2=torch.zeros(1,200,100)
             shape1=query_title.shape[-1]
             shape2=query_body.shape[-1]
-
 
             garbo1[0,:,:min(25,shape1)]=query_title[0,:,:min(25,shape1)]
             garbo2[0,:,:min(100,shape2)]=query_body[0,:,:min(100,shape2)]
 
             garbage1=torch.cat((garbage1,garbo1),0)
             garbage2=torch.cat((garbage2,garbo2),0)
-        temp=torch.cat((garbage1,garbage2),2)
+        #Concat the title and the bodies: we get 22x200x125. 125=25+100 (title+body)
+        #22 comes from: 1(main query)+1(positive_query)+20(negative samples)
         return {"x":torch.cat((garbage1,garbage2),2)}
 training=Data(train)
 
 
-
+#CONV1D: in_channels=encoding dimension,
 class CNN(nn.Module):
     def __init__(self,hidden_size,window):
         super(CNN,self).__init__()
@@ -181,7 +195,7 @@ class CNN(nn.Module):
         self.conv=nn.Sequential(nn.Conv1d(
             in_channels=200,
             out_channels=hidden_size,
-            kernel_size=3,
+            kernel_size=window,
             stride=1,
         ),
         nn.Tanh())
@@ -222,17 +236,18 @@ def parser():
 args=parser()
 def run_epoch(data,model,optimizer,args,is_training):
     data_loader=torch.utils.data.DataLoader(data,batch_size=args.batch_size,shuffle=False)
-    losses=[]
 
+    losses=0
     if is_training:
         model.train()
     else:
         model.eval()
     count=0
     for batch in tqdm(data_loader):
-        print count
         count+=1
+
         x=autograd.Variable(batch["x"])
+
         y=autograd.Variable(torch.zeros(args.batch_size))
 
         if is_training:
@@ -244,8 +259,9 @@ def run_epoch(data,model,optimizer,args,is_training):
         if is_training:
             loss.backward()
             optimizer.step()
-        losses.append(loss)
-    return np.mean(losses)
+        print loss
+        losses+=loss.data
+    return 1.0*losses/count
 def train_model(train_data,dev_data,test_data,model):
     optimizer=torch.optim.Adam(model.parameters(),lr=args.lr,weight_decay=args.weight)
 
