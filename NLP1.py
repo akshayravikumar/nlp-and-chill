@@ -29,8 +29,15 @@ train, dev, test = make_sets(
     DATA_DIR + "test.txt",
     args
 )
+
+
 train_data = Data(train)
+dev_data=Eval_Data(dev)
+test_data=Eval_Data(test)
+
+
+
 
 print()
 print("Running model...")
-results = train_model(train_data, None, None, net, args)
+results = train_model(train_data, dev_data, None, net, args)

@@ -30,11 +30,14 @@ def embeddings(directory):
     return embeddings, mapping
 
 def parse_file(file, a, b, c):
-    matrix = np.zeros((a, b, c))
+    matrix=[]
 
     query = file.readline()
-    counter = 0
     while query!="":
+        temp = np.zeros((b, c))
+        if "\t\t" in query:
+            query=file.readline()
+            continue
         arr = query.split("\t")
 
         # An extra field is found in val and test sets (BM25 scores)
@@ -42,7 +45,7 @@ def parse_file(file, a, b, c):
             q, q_pos, Q_neg, BM = arr
             BM = BM.split()
             BM = [float(x) for x in BM]
-            matrix[counter, 3, :] = BM[:20]
+            temp[3, :] = BM[:20]
         else:
             q, q_pos, Q_neg = arr
         q = int(q)
@@ -59,19 +62,18 @@ def parse_file(file, a, b, c):
 
         q_neg_pad = Q_neg[:20]
 
-        matrix[counter, 0, :] = q_pad
-        matrix[counter, 1, :] = q_pos_pad
-        matrix[counter, 2, :] = q_neg_pad
+        temp[0, :] = q_pad
+        temp[1, :] = q_pos_pad
+        temp[2, :] = q_neg_pad
 
         query = file.readline()
-        counter += 1
-        if counter == a:
-            break
-    return matrix
+        matrix.append(temp)
+
+    return np.asarray(matrix)
 
 # Assuming num_negs>num_pos
 num_negs = 20
-def make_sets(dir_train, dir_test, dir_dev, args):
+def make_sets(dir_train, dir_dev,dir_test, args):
     train_file = open(dir_train)
     dev_file = open(dir_dev)
     test_file = open(dir_test)
@@ -127,3 +129,15 @@ def question_to_vec(question, mapping):
         a = a.reshape(1, x, y)
     garbage = torch.from_numpy(a).float()
     return garbage
+#Fit the small into the big. (Assuming the shape is 3 tuple), assuming padding happens
+#in the 3rd access. TODO: It might be helpful to do this for other axis. Not needed ATM
+def pad(big,small):
+    big_a,big_b,big_c=big.shape
+    small_a,small_b,small_c=small.shape
+
+    compromise=min(big_c,small_c)
+    big[:,:,:compromise]=small[:,:,:compromise]
+
+    return big
+
+
