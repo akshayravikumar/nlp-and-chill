@@ -98,7 +98,7 @@ class Eval_Data(data.Dataset):
         positive_ids=[]
         for elt in self.data[i,1,:]:
             if elt>=0:
-                positive_ids.append(elt)
+                positive_ids.append(int(elt))
         return positive_ids
 
 
