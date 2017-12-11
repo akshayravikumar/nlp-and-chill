@@ -44,8 +44,8 @@ def run_epoch(data,val_set,test_set, model, optimizer, args, is_training):
             #     test_x=autograd.Variable(test_batch["x"])
             #     BM25=dev_batch["BM25"]
             #     ids=dev_batch["id"]
-            print "MAP"+str(dev_measure.MAP())
-            print "MRR"+str(dev_measure.MRR())
+            print("MAP", str(dev_measure.MAP()))
+            print("MRR", str(dev_measure.MRR()))
             #print "Test Loss"
         print("LOSS", loss.data[0])
         losses += loss.data
