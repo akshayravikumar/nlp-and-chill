@@ -13,7 +13,7 @@ from parse_utils import *
 from cnn_model import *
 
 parser = argparse.ArgumentParser(description = "NLP project P1")
-parser.add_argument("--lr", type = float, default = 0.001)
+parser.add_argument("--lr", type = float, default = 0.01)
 parser.add_argument("--epochs", type = int, default = 10)
 parser.add_argument("--batch_size", type = int, default = 40)
 parser.add_argument("--weight", type = float, default = 1e-3)
@@ -22,7 +22,7 @@ parser.add_argument("--num_training_samples", type = int, default = NUM_SAMPLES)
 args = parser.parse_args()
 
 print("Parsing data...")
-net = CNN(500, 3)
+net = CNN(250, 3)
 train, dev, test = make_sets(
     DATA_DIR + "train_random.txt",
     DATA_DIR + "dev.txt",

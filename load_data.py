@@ -37,7 +37,7 @@ class Data(data.Dataset):
         main_body = question_to_vec(main_query, id_to_body)
         # Some words have empty mappings, hence this hack just bypasses them
         if main_title is None or main_body is None:
-            return {"x" : torch.zeros(22, 200, 125)}
+            return {"x": torch.zeros(22, 200, 125)}
         garbage1=pad(torch.zeros(1, 200, 25),main_title)
         garbage2=pad(torch.zeros(1,200,100),main_body)
         for elt in self.Xmatrix[index,1:]:

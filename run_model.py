@@ -10,7 +10,6 @@ from metrics import Measure
 
 def run_epoch(data,val_set,test_set, model, optimizer, args, is_training):
     data_loader = torch.utils.data.DataLoader(data, batch_size = args.batch_size, shuffle = False)
-
     losses = 0
     if is_training:
         model.train()
@@ -28,7 +27,7 @@ def run_epoch(data,val_set,test_set, model, optimizer, args, is_training):
         if is_training:
             loss.backward()
             optimizer.step()
-        if count%10==1:
+        if count%50==1:
             dev_loader=torch.utils.data.DataLoader(val_set, batch_size = 1, shuffle = False)
             #test_loader=torch.utils.data.DataLoader(test_set, batch_size = 1, shuffle = False)
             dev_measure = Measure()

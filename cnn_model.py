@@ -6,6 +6,7 @@ import torch.utils.data as data
 from tqdm import tqdm
 import numpy as np
 
+
 # CONV1D: in_channels = encoding dimension,
 class CNN(nn.Module):
     def __init__(self, hidden_size, window):
@@ -29,6 +30,7 @@ class CNN(nn.Module):
             body = sample[:,:,25:]
 
             out1 = self.conv(title)
+            print out1.data[:2,0,:]
             out1 = self.pool(out1)
 
             out2 = self.conv(body)
