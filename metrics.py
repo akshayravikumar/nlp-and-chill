@@ -25,7 +25,9 @@ class Measure(object):
         #Greatest to least
         count=0.0
         sorted_indices=np.argsort(out.numpy())[::-1]
+        easy=[]
         for rank,x in enumerate(sorted_indices):
+            #Is x a positive index
             if x in pos_indices:
                 #For MRR
                 if count==0.0:
@@ -33,19 +35,21 @@ class Measure(object):
                 #P@1
                 if rank==0:
                     self.score3.append(1.0)
+
                 #P@5
                 if rank<5:
                     count2+=1
                 count+=1.0
                 temp.append(count/(rank+1))
         self.score4.append(1.0*count2/5.0)
-        self.score1.append(sum(temp)/len(temp)) if len(temp)>0 else 0.0
+        self.score1.append(sum(temp)/len(temp)) if len(temp)>0 else self.score1.append(0.0)
     def MRR(self):
         return 1.0*sum(self.score2)/len(self.score2)
     def MAP(self):
         return 1.0*sum(self.score1)/len(self.score1)
     def P1(self):
-        return 1.0*sum(self.score3)/len(self.score3)
+        return 1.0*sum(self.score3)/len(self.score1)
     def P5(self):
         return 1.0*sum(self.score4)/len(self.score4)
+#Need to check BM25 rankings with these functions
 

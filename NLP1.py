@@ -40,4 +40,4 @@ test_data=Eval_Data(test)
 
 print()
 print("Running model...")
-results = train_model(train_data, dev_data, None, net, args)
+results = train_model(train_data, dev_data, test_data, net, args)

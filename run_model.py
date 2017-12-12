@@ -9,7 +9,7 @@ from metrics import Measure
 
 
 def run_epoch(data,val_set,test_set, model, optimizer, args, is_training):
-    data_loader = torch.utils.data.DataLoader(data, batch_size = args.batch_size, shuffle = False)
+    data_loader = torch.utils.data.DataLoader(data, batch_size = args.batch_size, shuffle = True)
     losses = 0
     if is_training:
         model.train()
@@ -29,14 +29,17 @@ def run_epoch(data,val_set,test_set, model, optimizer, args, is_training):
             optimizer.step()
         if count%50==1:
             dev_loader=torch.utils.data.DataLoader(val_set, batch_size = 1, shuffle = False)
-            #test_loader=torch.utils.data.DataLoader(test_set, batch_size = 1, shuffle = False)
+            test_loader=torch.utils.data.DataLoader(test_set, batch_size = 1, shuffle = False)
             dev_measure = Measure()
             batch_row=0
-            for dev_batch in dev_loader:
+            for dev_batch in test_loader:
+
                 dev_x=autograd.Variable(dev_batch["x"])
                 out_dev_x=model(dev_x).data
+                out_dev_x=dev_batch["BM25"][0,:]
+                #print type(out_dev_x)
                 ids=dev_batch["ids"][0,:]
-                pos_ids=val_set.positives(batch_row)
+                pos_ids=test_set.positives(batch_row)
                 dev_measure.add_sample(out_dev_x,None,ids[1:],pos_ids)
                 batch_row+=1
             # for test_batch in test_loader:
@@ -45,6 +48,8 @@ def run_epoch(data,val_set,test_set, model, optimizer, args, is_training):
             #     ids=dev_batch["id"]
             print("MAP", str(dev_measure.MAP()))
             print("MRR", str(dev_measure.MRR()))
+            print("P1",str(dev_measure.P1()))
+            print("P5",str(dev_measure.P5()))
             #print "Test Loss"
         print("LOSS", loss.data[0])
         losses += loss.data
