@@ -13,6 +13,7 @@ class Measure(object):
         self.score3=[]
         self.score4=[]
     def add_sample(self,out,BM25,ids,pos_ids):
+        out=out[0,:]
         #Calculate MRR,MAP for each iteration
         #Map only for positive
         temp=[]
@@ -44,12 +45,12 @@ class Measure(object):
         self.score4.append(1.0*count2/5.0)
         self.score1.append(sum(temp)/len(temp)) if len(temp)>0 else self.score1.append(0.0)
     def MRR(self):
-        return 1.0*sum(self.score2)/len(self.score2)
+        return 1.0*sum(self.score2)/len(self.score1)
     def MAP(self):
         return 1.0*sum(self.score1)/len(self.score1)
     def P1(self):
         return 1.0*sum(self.score3)/len(self.score1)
     def P5(self):
-        return 1.0*sum(self.score4)/len(self.score4)
+        return 1.0*sum(self.score4)/len(self.score1)
 #Need to check BM25 rankings with these functions
 

@@ -131,6 +131,7 @@ def question_to_vec(question, mapping):
     return garbage
 #Fit the small into the big. (Assuming the shape is 3 tuple), assuming padding happens
 #in the 3rd access. TODO: It might be helpful to do this for other axis. Not needed ATM
+window=3
 def pad(big,small):
     big_a,big_b,big_c=big.shape
     small_a,small_b,small_c=small.shape
@@ -138,6 +139,10 @@ def pad(big,small):
     compromise=min(big_c,small_c)
     big[:,:,:compromise]=small[:,:,:compromise]
 
-    return big
+
+    if compromise>big_c-window:
+        return big,[big_c-window]
+    else:
+        return big,[compromise]
 
 
