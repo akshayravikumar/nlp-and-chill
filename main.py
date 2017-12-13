@@ -8,7 +8,7 @@ import numpy as np
 import argparse
 
 from load_data import *
-from run_model import *
+from run_model2 import *
 from parse_utils import *
 from cnn_model import *
 from lstm_model import *
@@ -16,20 +16,21 @@ from lstm_model import *
 parser = argparse.ArgumentParser(description = "NLP project P1")
 parser.add_argument("--lr", type = float, default = 0.001)
 parser.add_argument("--epochs", type = int, default = 10)
-parser.add_argument("--batch_size", type = int, default = 40)
+parser.add_argument("--batch_size", type = int, default = 20)
 parser.add_argument("--weight", type = float, default = 1e-3)
 parser.add_argument("--num_training_samples", type = int, default = NUM_SAMPLES)
 parser.add_argument("--model", type = str, default = "cnn")
 
 args = parser.parse_args()
 
-print("Parsing data...")
-if args.model == "cnn":
-	net = CNN(500, 3)
-elif args.model == "lstm":
-	net = LSTM(500)
-else:
-	raise Exception("Model is either cnn or lstm")
+# print("Parsing data...")
+# if args.model == "cnn":
+# 	net = CNN(500, 3)
+# elif args.model == "lstm":
+# 	net = LSTM(500)
+# else:
+# 	raise Exception("Model is either cnn or lstm")
+net=LSTM(240,200)
 
 train, dev, test = make_sets(
     DATA_DIR + "train_random.txt",
