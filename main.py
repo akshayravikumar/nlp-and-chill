@@ -7,7 +7,8 @@ from tqdm import tqdm
 import numpy as np
 import argparse
 
-from load_data import *
+from eval_data import *
+from train_data import *
 from run_model import *
 from parse_utils import *
 from cnn_model import *
@@ -31,17 +32,13 @@ elif args.model == "lstm":
 else:
 	raise Exception("Model is either cnn or lstm")
 
-train, dev, test = make_sets(
-    DATA_DIR + "train_random.txt",
-    DATA_DIR + "dev.txt",
-    DATA_DIR + "test.txt",
-    args
-)
+train = make_set(SOURCE_DIR + "train_random.txt", args, training=True)
+dev = make_set(SOURCE_DIR + "dev.txt", args)
+test = make_set(SOURCE_DIR + "test.txt", args)
 
-train_data = Data(train)
-dev_data = Eval_Data(dev)
-test_data = Eval_Data(test)
-
+train_data = TrainData(train)
+dev_data = EvalData(dev)
+test_data = EvalData(test)
 
 print()
 print("Running model...")

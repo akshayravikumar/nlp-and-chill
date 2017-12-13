@@ -6,7 +6,7 @@ import torch.utils.data as data
 from tqdm import tqdm
 import numpy as np
 
-#Assuming we're using CNN for transfer learning
+# Assuming we're using CNN for transfer learning
 
 class grad_reversal(F):
     lamb_sauce=1.0

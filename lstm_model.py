@@ -35,7 +35,7 @@ class LSTM(nn.Module):
             out1 = self.pool(out1)
 
             out2, _ = self.lstm(body)
-            out12= self.tanh(out2)
+            out2 = self.tanh(out2)
             out2 = self.pool(out2)
 
             out = self.pool(torch.cat((out1, out2),2))

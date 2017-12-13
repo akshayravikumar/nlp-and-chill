@@ -6,7 +6,9 @@ import torch.utils.data as data
 from tqdm import tqdm
 import numpy as np
 
-DATA_DIR = "askubuntu/"
+SOURCE_DIR = "askubuntu/"
+TARGET_DIR = "Android/"
+
 NUM_SAMPLES = 12724
 
 # Returns an array of vecs for words and their mappings (word to index in array)
@@ -73,17 +75,11 @@ def parse_file(file, a, b, c):
 
 # Assuming num_negs>num_pos
 num_negs = 20
-def make_sets(dir_train, dir_dev,dir_test, args):
-    train_file = open(dir_train)
-    dev_file = open(dir_dev)
-    test_file = open(dir_test)
-
-
-    train = parse_file(train_file, args.num_training_samples, 3, num_negs)
-    dev = parse_file(dev_file, 200, 4, num_negs)
-    test = parse_file(test_file, 200, 4, num_negs)
-
-    return train, dev, test
+def make_set(file_name, args, training=False):
+    file = open(file_name)
+    if training:
+        return parse_file(file, args.num_training_samples, 3, num_negs)
+    return parse_file(train_file, 200, 4, num_negs)
 
 # Takes raw corpus files and outputs tuple of dictionaries, maps from id to array of words(string)
 def corpus(directory):
@@ -106,8 +102,9 @@ def corpus(directory):
         temp = file.readline()
     return id_to_title, id_to_body
 
-embeddings, map = embeddings(DATA_DIR + "vectors_pruned.200.txt")
-id_to_title, id_to_body = corpus(DATA_DIR + "text_tokenized.txt")
+embeddings, map = embeddings(SOURCE_DIR + "vectors_pruned.200.txt")
+id_to_title, id_to_body = corpus(SOURCE_DIR + "text_tokenized.txt")
+id_to_title_target, id_to_body_target = corpus(TARGET_DIR + "corpus.tsv")
 
 # Question id, mapping: either id_to_title or id_to_body
 def question_to_vec(question, mapping):
@@ -129,20 +126,19 @@ def question_to_vec(question, mapping):
         a = a.reshape(1, x, y)
     garbage = torch.from_numpy(a).float()
     return garbage
-#Fit the small into the big. (Assuming the shape is 3 tuple), assuming padding happens
-#in the 3rd access. TODO: It might be helpful to do this for other axis. Not needed ATM
-window=3
+
+# Fit the small into the big. (Assuming the shape is 3 tuple), assuming padding happens
+# in the 3rd access. TODO: It might be helpful to do this for other axis. Not needed ATM
+window = 3
 def pad(big,small):
-    big_a,big_b,big_c=big.shape
-    small_a,small_b,small_c=small.shape
+    big_a,big_b,big_c = big.shape
+    small_a,small_b,small_c = small.shape
 
-    compromise=min(big_c,small_c)
-    big[:,:,:compromise]=small[:,:,:compromise]
+    compromise = min(big_c,small_c)
+    big[:,:,:compromise] = small[:,:,:compromise]
 
 
-    if compromise>big_c-window:
-        return big,[big_c-window]
+    if compromise > big_c - window:
+        return big, [big_c - window]
     else:
-        return big,[compromise]
-
-
+        return big, [compromise]
