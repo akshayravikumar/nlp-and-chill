@@ -13,7 +13,8 @@ class Measure(object):
         self.score3=[]
         self.score4=[]
     def add_sample(self,out,BM25,ids,pos_ids):
-        out=out[0,:]
+        if len(out.shape)==2:
+            out=out[0,:]
         #Calculate MRR,MAP for each iteration
         #Map only for positive
         temp=[]
