@@ -118,12 +118,16 @@ def parse_android(pos_filename, neg_filename):
         id1, id2 = [int(x) for x in line.split(" ")]
         if id1 not in positive:
             positive[id1] = []
+        if len(positive[id1]) >= 1:
+            continue
         positive[id1].append(id2)
 
     for line in neg:
         id1, id2 = [int(x) for x in line.split(" ")]
         if id1 not in negative:
             negative[id1] = []
+        if len(negative[id1]) >= 100:
+            continue
         negative[id1].append(id2)
 
     return positive, negative
@@ -131,6 +135,8 @@ def parse_android(pos_filename, neg_filename):
 
 dev_pos, dev_neg = parse_android(TARGET_DIR + "dev.pos.txt", TARGET_DIR + "dev.neg.txt")
 test_pos, test_neg = parse_android(TARGET_DIR + "test.pos.txt", TARGET_DIR + "test.neg.txt")
+print(max(len(v) for v in dev_pos.values()))
+print(max(len(v) for v in test_pos.values()))
 
 print("Parsing embeddings...")
 embeddings, map = embeddings(SOURCE_DIR + "vectors_pruned.200.txt")

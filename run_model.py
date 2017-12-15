@@ -6,11 +6,11 @@ import torch.utils.data as data
 from tqdm import tqdm
 import numpy as np
 from metrics import Measure
-
+from meter import AUCMeter
 
 LAMBDA = 0.1
 
-def run_epoch(train_data, val_set, test_set, model, domain_model, 
+def run_epoch(train_data, dev_data, test_data, model, domain_model, 
                 optimizer_feature, optimizer_domain, args, is_training):
     data_loader = torch.utils.data.DataLoader(
         train_data, batch_size=args.batch_size, shuffle=True)
@@ -24,13 +24,14 @@ def run_epoch(train_data, val_set, test_set, model, domain_model,
         domain_model.train()
 
     count = 0
+
+    meter = AUCMeter()
     # Switch between the two datasets
     for batch in tqdm(data_loader):
         count += 1
         x = autograd.Variable(batch["x"])
         y = autograd.Variable(torch.zeros(batch["x"].shape[0]))
         dataset_y = autograd.Variable(batch["dataset"]).float()
-        # print(dataset_y)
 
         pad_title = batch["pad_title"]
         pad_body = batch["pad_body"]
@@ -64,34 +65,28 @@ def run_epoch(train_data, val_set, test_set, model, domain_model,
             optimizer_feature.step()
             optimizer_domain.step()
 
-        if count % 15 == 1:
+        if count % 5 == 1:
             dev_loader = torch.utils.data.DataLoader(
-                val_set, batch_size=1, shuffle=True)
+                dev_data, batch_size=1, shuffle=True)
             #test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1, shuffle = False)
-            dev_measure = Measure()
             batch_row = 0
-            for dev_batch in dev_loader:
+            for dev_batch in tqdm(dev_loader):
                 dev_x = autograd.Variable(dev_batch["x"])
                 dev_pad_title = dev_batch["pad_title"]
                 dev_pad_body = dev_batch["pad_body"]
                 out_dev_x_raw, _ = model(dev_x, dev_pad_title, dev_pad_body)
-                out_dev_x = out_dev_x_raw.data
+                out_dev_x = out_dev_x_raw.data[0]
+                truth = [0] * len(out_dev_x)
+                truth[0] = 1
+                # print("OUT DEV X", out_dev_x)
+                # print(out_dev_x.shape, len(truth))
 
+                meter.add(out_dev_x, np.asarray(truth))
                 #out_dev_x = dev_batch["BM25"][0,:]
-                ids = dev_batch["ids"][0, :]
-                pos_ids = val_set.positives(batch_row)
-                dev_measure.add_sample(out_dev_x, None, ids[1:], pos_ids)
                 # print(out_dev_x, ids[1:], pos_ids)
                 batch_row += 1
-            # for test_batch in test_loader:
-            #     test_x = autograd.Variable(test_batch["x"])
-            #     BM25 = dev_batch["BM25"]
-            #     ids = dev_batch["id"]
-            print("MAP", dev_measure.MAP())
-            print("MRR", dev_measure.MRR())
-            print("P1", dev_measure.P1())
-            print("P5", dev_measure.P5())
             #print "Test Loss"
+        print("AUC", meter.value(0.05))
         print("FEATURE LOSS", loss_feature.data[0])
         print("DOMAIN LOSS", loss_domain.data[0])
         losses_feature += loss_feature.data

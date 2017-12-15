@@ -11,7 +11,6 @@ from eval_data import *
 from train_data import *
 from android_data import *
 from shuffle_data import *
-from eval_android_data import *
 
 from run_model import *
 from parse_utils import *
@@ -49,6 +48,8 @@ dev_data = EvalData(dev)
 test_data = EvalData(test)
 
 print("Parsing Android data...")
+
+
 train_data_target = AndroidData(size=22)
 dev_data_target = AndroidData(pos_map=dev_pos, neg_map=dev_neg)
 test_data_target = AndroidData(pos_map=test_pos, neg_map=test_neg)
@@ -57,4 +58,4 @@ shuffle_data = ShuffleData(train_data, train_data_target)
 
 print()
 print("Running model...")
-results = train_model(shuffle_data, dev_data, None, net, domain_model, args)
+results = train_model(shuffle_data, dev_data_target, test_data_target, net, domain_model, args)
