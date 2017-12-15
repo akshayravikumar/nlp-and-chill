@@ -8,7 +8,8 @@ import numpy as np
 from parse_utils import *
 import random
 
-class EvalData(data.Dataset):
+
+class Eval_Data(data.Dataset):
     #Expecting data to be of dims: (around 200, 4,#negs)
     def __init__(self, data):
         self.data = data
@@ -36,6 +37,7 @@ class EvalData(data.Dataset):
         mainQ_title = question_to_vec(mainQ, id_to_title)
         mainQ_body = question_to_vec(mainQ, id_to_body)
         if mainQ_title is None or mainQ_body is None:
+            print "lol1"
             rand_ind= random.randint(0,len(self.data)-1)
             return self.__getitem__(rand_ind)
         garbage1,comp1 = pad(torch.zeros(1, 200, 25), mainQ_title)
@@ -46,6 +48,7 @@ class EvalData(data.Dataset):
             query_title = question_to_vec(elt, id_to_title)
             query_body = question_to_vec(elt, id_to_body)
             if query_title is None or query_body is None:
+                print "lol2"
                 rand_ind = random.randint(0, len(self.data) - 1)
                 return self.__getitem__(rand_ind)
             garbo1, comp3 = pad(torch.zeros(1, 200, 25), query_title)
@@ -71,4 +74,6 @@ class EvalData(data.Dataset):
                 positive_ids.append(int(elt))
         positive_ids=np.asarray(positive_ids,dtype="int")
         return torch.from_numpy(positive_ids)
+
+
 
